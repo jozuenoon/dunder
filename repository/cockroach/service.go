@@ -217,7 +217,7 @@ const (
 
 func (s *Service) Trends(ctx context.Context, filter repository.Filter) (*repository.MessagesAggregate, error) {
 	if !filter.IsAggregateQuery() {
-		return nil, fmt.Errorf("expected aggregate filter query")
+		return nil, fmt.Errorf("expected aggregate filter query, possibly missing `aggregate` query option")
 	}
 	if !filter.IsDateRangeQuery() {
 		return nil, fmt.Errorf("aggregated query requires valid date range")
@@ -228,7 +228,7 @@ func (s *Service) Trends(ctx context.Context, filter repository.Filter) (*reposi
 	toBoundary := filter.GetToDate().Unix() / minute
 
 	query := s.DB.Table("trends").
-		Select("bucket/? as bbucket,sum(count)", bucketSize).
+		Select("floor(bucket/?) as bbucket,sum(count)", bucketSize).
 		Where("bucket > ?", fromBoundary).
 		Where("bucket < ?", toBoundary).
 		Order("bbucket").

@@ -14,8 +14,9 @@ func RepositoryMessagesAdapter(in []*repository.Message) []*model.Message {
 				ID:   m.User.ID,
 				Name: *m.User.Name,
 			},
-			Text:     m.Text,
-			Hashtags: extractTagText(m.Hashtags),
+			Text:      m.Text,
+			Hashtags:  extractTagText(m.Hashtags),
+			CreatedAt: m.CreatedAt,
 		})
 	}
 	return out
