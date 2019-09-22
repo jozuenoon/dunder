@@ -1,0 +1,12 @@
+tls: true
+cert_file: tls/crt.pem
+key_file: tls/key.pem
+port: 8081
+debug: true
+
+cockroach_db:
+  host: localhost
+  should_migrate: true
+  debug: true
+  database: live_database
+  user: root
