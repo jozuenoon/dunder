@@ -145,11 +145,30 @@ Trends options:
 
 # Further development
 
+This section describes some further development steps to release Dunder to public.
+
 ## Deployment
 
 Standard method is to build helm chart and scale service using Kubernetes cluster.
 Some reference implementation could be look up [here](https://github.com/jozuenoon/message_bus/tree/master/deployment).
 CockroachDB could be also easily setup and maintained in K8S [cluster](https://github.com/helm/charts/tree/master/stable/cockroachdb).
+Usually it's good choice to use `ingress-nginx` controller with TLS termination.
+
+## Kubernetes and TLS
+
+Best approach is to use `LetEncrypt` and `cert-manager` to manage TLS along with DNS resolver. 
+Certificates are stored directly in K8S secrets and can be mounted to service or used by ingress 
+controller if TLS termination is made on LB level.
+
+## Monitoring and health checks
+
+Kubernetes rolling update and load balancing requires decently working health checks for readiness and liveness
+probes. This enable load balancing and rolling update to happen properly with no down times or missed requests.
+
+With [OpenCensus](https://opencensus.io/) it's easy to implement tracing and monitoring layers, to gain insights on usage and performance
+of service. By using `OpenCensus` one would have a lot of options for exporting tracing and metrics. For even deeper dive 
+if application is deployed on GKE there is very nice tool for [profiling with pprof](https://cloud.google.com/profiler/docs/profiling-go)
+so flame charts are directly available on Stackdriver page. Some additional [reference](https://medium.com/google-cloud/continuous-profiling-of-go-programs-96d4416af77b).
 
 ## Architecture expansion and performance
 
