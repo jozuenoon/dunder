@@ -152,8 +152,6 @@ func parseQuery(vals url.Values) (*model.QueryRequest, error) {
 	if err := json.NewEncoder(&buf).Encode(vals); err != nil {
 		return nil, err
 	}
-	fmt.Println(vals.Encode())
-	fmt.Println(buf.String())
 	var flat flatQuery
 	if err := json.NewDecoder(&buf).Decode(&flat); err != nil {
 		return nil, err

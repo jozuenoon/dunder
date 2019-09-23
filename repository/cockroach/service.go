@@ -244,6 +244,7 @@ func (s *Service) Trends(ctx context.Context, filter repository.Filter) (*reposi
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var trends []*model.Trend
 	for rows.Next() {
 		var raw rawTrend
