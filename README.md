@@ -1,5 +1,7 @@
 # Dunder - geeky message API
 
+[![GolangCI](https://golangci.com/badges/github.com/jozuenoon/dunder.svg)](https://golangci.com/r/github.com/jozuenoon/dunder)
+
 Dunder the message JSON API provides gateway for sharing messages directly out of 
 you console. For best experience you may want to write your own tool for
 sharing messages or just use curl :)
