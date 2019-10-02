@@ -23,7 +23,8 @@ trigger:
 services:
   - name: cockroachdb
     image: cockroachdb/cockroach:v19.1.4
-    command: start --insecure
+    command:
+     - "start --insecure"
 
 steps:
   # Goreleaser needs at least the last two tags.
