@@ -17,6 +17,7 @@ func (h *Http) writeError(err error, w http.ResponseWriter) {
 	case unauthorized:
 		w.WriteHeader(http.StatusUnauthorized)
 	case gorm.ErrRecordNotFound:
+		// This error should be masked by Service error instead so dependencies to gorm are not propagated here.
 		w.WriteHeader(http.StatusNotFound)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
