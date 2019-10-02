@@ -13,7 +13,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/jozuenoon/dunder/repository"
 	"github.com/oklog/ulid"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -77,7 +76,6 @@ var _ repository.Service = (*ServiceImpl)(nil)
 type ServiceImpl struct {
 	DB          *gorm.DB
 	ulidEntropy io.Reader
-	log         *zerolog.Logger
 }
 
 func (s *ServiceImpl) Message(ctx context.Context, ulid string) (*repository.Message, error) {
