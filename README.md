@@ -29,7 +29,7 @@ $ mkcert -cert-file ./tls/crt.pem -key-file ./tls/key.pem dunder.io "*.dunder.io
 
 Currently Dunder provides only `CockroachDB` backend. However implementation
 is based on [gorm](https://gorm.io/) so potentially it's possible to port
-it to other databases. However some inline SQL may be compatible only with Postgres.
+it to other databases. Note that some inline SQL may be compatible only with Postgres.
 
 Run `docker-compose up` to setup local CockroachDB cluster. Setup provides useful
 web interface at port `8080`. Please consult `docker-compose.yaml` as some folder may
@@ -141,7 +141,7 @@ Trends options:
 - from_date - from date range
 - to_date - to date range
 - hashtag - filter by hashtag
-- aggregation - aggregation period (in case of querying trends endpoint)
+- aggregation - aggregation period
 ```
 
 # Further development
@@ -157,7 +157,7 @@ Usually it's good choice to use `ingress-nginx` controller with TLS termination.
 
 ## Kubernetes and TLS
 
-Best approach is to use `LetEncrypt` and `cert-manager` to manage TLS along with DNS resolver. 
+Simplest approach is to use `LetEncrypt` and `cert-manager` to manage TLS along with DNS resolver. 
 Certificates are stored directly in K8S secrets and can be mounted to service or used by ingress 
 controller if TLS termination is made on LB level.
 
