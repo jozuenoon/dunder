@@ -21,7 +21,8 @@ TLS certs for development are stored under `tls` directory. Use
 [mkcert](https://github.com/FiloSottile/mkcert) to generate valid local
 certificates.
 ```bash
-$ mkcert dunder.io "*.dunder.io" dunder.test localhost 127.0.0.1 ::1 -cert-file ./tls/crt.pem -key-file ./tls/key.pem
+$ mkcert -install
+$ mkcert -cert-file ./tls/crt.pem -key-file ./tls/key.pem dunder.io "*.dunder.io" dunder.test localhost 127.0.0.1 ::1
 ```
 
 ## Setup local database
