@@ -29,7 +29,7 @@ type Config struct {
 	User          *string
 }
 
-func New(cfg *Config) (*Service, error) {
+func New(cfg *Config) (*ServiceImpl, error) {
 	t := time.Now()
 	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
 
@@ -38,7 +38,7 @@ func New(cfg *Config) (*Service, error) {
 		return nil, err
 	}
 
-	return &Service{
+	return &ServiceImpl{
 		DB:          db,
 		ulidEntropy: entropy,
 	}, nil
@@ -72,15 +72,15 @@ func newDatabase(host string, shouldMigrate, debug bool, database, user *string)
 	return db, nil
 }
 
-var _ repository.Service = (*Service)(nil)
+var _ repository.Service = (*ServiceImpl)(nil)
 
-type Service struct {
+type ServiceImpl struct {
 	DB          *gorm.DB
 	ulidEntropy io.Reader
 	log         *zerolog.Logger
 }
 
-func (s *Service) Message(ctx context.Context, ulid string) (*repository.Message, error) {
+func (s *ServiceImpl) Message(ctx context.Context, ulid string) (*repository.Message, error) {
 	var resp repository.Message
 	if result := s.DB.Where("ulid = ?", ulid).Preload("User").Preload("Hashtags").First(&resp); result.Error != nil {
 		return nil, result.Error
@@ -88,7 +88,7 @@ func (s *Service) Message(ctx context.Context, ulid string) (*repository.Message
 	return &resp, nil
 }
 
-func (s *Service) getUserByName(db *gorm.DB, name string) (*repository.User, error) {
+func (s *ServiceImpl) getUserByName(db *gorm.DB, name string) (*repository.User, error) {
 	user := &repository.User{
 		Name: &name,
 	}
@@ -98,7 +98,7 @@ func (s *Service) getUserByName(db *gorm.DB, name string) (*repository.User, err
 	return user, nil
 }
 
-func (s *Service) getHashtagsByText(db *gorm.DB, texts []string) ([]*repository.Hashtag, error) {
+func (s *ServiceImpl) getHashtagsByText(db *gorm.DB, texts []string) ([]*repository.Hashtag, error) {
 	var hashtags []*repository.Hashtag
 	if err := db.Where("text IN (?)", texts).Find(&hashtags).Error; err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (s *Service) getHashtagsByText(db *gorm.DB, texts []string) ([]*repository.
 	return append(hashtags, missingTags...), nil
 }
 
-func (s *Service) CreateMessage(ctx context.Context, req *repository.CreateMessageRequest) (mID string, err error) {
+func (s *ServiceImpl) CreateMessage(ctx context.Context, req *repository.CreateMessageRequest) (mID string, err error) {
 	t := time.Now()
 	u, err := ulid.New(ulid.Timestamp(t), s.ulidEntropy)
 	if err != nil {
@@ -178,7 +178,7 @@ func (s *Service) CreateMessage(ctx context.Context, req *repository.CreateMessa
 	return *message.Ulid, nil
 }
 
-func (s *Service) Messages(ctx context.Context, filter repository.Filter) ([]*repository.Message, error) {
+func (s *ServiceImpl) Messages(ctx context.Context, filter repository.Filter) ([]*repository.Message, error) {
 	var resp []*repository.Message
 
 	if filter.IsAggregateQuery() {
@@ -215,7 +215,7 @@ const (
 	minute = 60
 )
 
-func (s *Service) Trends(ctx context.Context, filter repository.Filter) (*repository.MessagesAggregate, error) {
+func (s *ServiceImpl) Trends(ctx context.Context, filter repository.Filter) (*repository.MessagesAggregate, error) {
 	if !filter.IsAggregateQuery() {
 		return nil, fmt.Errorf("expected aggregate filter query, possibly missing `aggregate` query option")
 	}
