@@ -40,6 +40,21 @@ services:
         aliases:
           - roach3
 
+  dunder:
+    container_name: dunder
+    image: jozuenoon/dunder:0.0.2
+    ports:
+      - "9000:9000"
+    command: --use_tls  --port 9000  --log_level debug  --cockroach.debug true  --cockroach.should_migrate true  --cockroach.database defaultdb  --cockroach.host roach1  --tls.crt /tls/crt.pem  --tls.key /tls/key.pem  --cockroach.user root
+    volumes:
+      - ./tls:/tls
+    depends_on:
+      - roach1
+    networks:
+      roachnet:
+        aliases:
+          - dunder
+
 networks:
   roachnet:
     driver: bridge

@@ -41,16 +41,16 @@ run: bin
 	./bin/dunder --config_file config.yaml
 
 new_message:
-	curl -d '{"text": "some text", "hashtags":["dummy3"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
+	curl -d '{"text": "some text", "hashtags":["dummy3"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:9000/message
 
 get_messages:
-	curl https://localhost:8081/message?ulid=${ulid} | jq '.'
+	curl https://localhost:9000/message?ulid=${ulid} | jq '.'
 
 get_message:
-	curl https://localhost:8081/message/${ulid} | jq '.'
+	curl https://localhost:9000/message/${ulid} | jq '.'
 
 get_tag:
-	curl https://localhost:8081/message?hashtag=dummy3 | jq '.'
+	curl https://localhost:9000/message?hashtag=dummy3 | jq '.'
 
 get_trends:
-	curl "https://localhost:8081/trend?from_date=2019-09-23&aggregation=24h&to_date=2019-10-22&hashtag=dummy3"
+	curl "https://localhost:9000/trend?from_date=2019-09-23&aggregation=24h&to_date=2019-10-22&hashtag=dummy3"

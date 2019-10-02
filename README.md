@@ -38,8 +38,12 @@ Run `docker-compose up` to setup local CockroachDB cluster. Setup provides usefu
 web interface at port `8080`. Please consult `docker-compose.yaml` as some folder may
 need to be created to mount cluster data volumes.
 
-Next you need to create database could be set later with `--cockroach_db.database`
-flag. For example using `postgresql-client`:
+Docker compose includes prebuild version of `dunder` connected with database cluster and it's available
+immediately after docker compose startup on port `9000`. In this scenario `dunder` would use
+`defaultdb` database.
+
+If you want to swap to other database you need to create it and set `--cockroach.database` flag.
+For example using `postgresql-client`:
 
 ```bash
 $ createdb -p 26257 -h localhost -U root -e live_database
@@ -68,30 +72,31 @@ running:
 ```bash
 $ ./bin/dunder -h
 Usage of dunder:
-      --tls                            Connection uses TLS if true, else plain TCP
-      --cert_file string               TLS certificate file path
-      --key_file string                TLS key file path
-      --port int                       GRPC port
-      --debug                          
-      --cockroach_db.host string       
-      --cockroach_db.should_migrate    
-      --cockroach_db.debug             
-      --cockroach_db.database string   
-      --cockroach_db.user string       
-      --config_file string             provide a config file path
-  -h, --help                           print this help menu
+      --use_tls                     Connection uses TLS if true, else plain TCP
+      --port int                    GRPC port
+      --log_level string            Options: debug, info, warn, error, fatal, panic
+      --cockroach.host string       
+      --cockroach.should_migrate    
+      --cockroach.debug             
+      --cockroach.database string   
+      --cockroach.user string       
+      --tls.crt string              TLS certificate file path
+      --tls.key string              TLS key file path
+      --config_file string          provide a config file path
+  -h, --help                        print this help menu
 ```
 
 Related flags could be set with config file `config.yaml`:
 
 ```yaml
-tls: true
-cert_file: tls/crt.pem
-key_file: tls/key.pem
-port: 8081
+use_tls: true
+tls:
+  crt: tls/crt.pem
+  key: tls/key.pem
+port: 9000
 debug: true
 
-cockroach_db:
+cockroach:
   host: localhost
   should_migrate: true
   debug: true
@@ -105,8 +110,8 @@ Post some messges:
 
 ```bash
 $ TOKEN=`echo -n $USER | base64 -w0`
-$ curl -d '{"text": "some text", "hashtags":["tag1", "tag2"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
-$ curl -d '{"text": "some other text", "hashtags":["tag3", "tag4"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
+$ curl -d '{"text": "some text", "hashtags":["tag1", "tag2"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:9000/message
+$ curl -d '{"text": "some other text", "hashtags":["tag3", "tag4"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:9000/message
 ```
 
 User header is required and users are dynamically created as Dunder don't provide yet
@@ -117,7 +122,7 @@ any endpoints for user management.
 Get some messages using eg. tag query:
 
 ```bash
-$ curl https://localhost:8081/message?hashtag=tag1
+$ curl https://localhost:9000/message?hashtag=tag1
 ```
 
 Filter options:
@@ -137,7 +142,7 @@ to filter with `hashtag`. Aggregation option would accept [time.Duration](https:
 it's minimal value is `1m`.
 
 ```bash
-$ curl "https://localhost:8081/trend?to_date=2019-09-23&aggregation=1m&from_date=2019-09-22&hashtag=dummy3"
+$ curl "https://localhost:9000/trend?to_date=2019-09-23&aggregation=1m&from_date=2019-09-22&hashtag=dummy3"
 ```
 
 Trends options:
@@ -182,7 +187,7 @@ efficiency at scale. Probably some geo partitioning tricks would be useful along
 distributing app servers in different locations around world.
 
 The nature of instant message sharing systems is that user would usually expect to see
-some recent messages. Leveraging this would evict old messages to other storage where
+some recent messages. System could then evict old messages to other storage where
 they can be searched eg. using only batch jobs, so live database would be efficient in 
 querying most recent messages.
 
