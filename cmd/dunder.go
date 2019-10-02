@@ -21,13 +21,14 @@ var config = struct {
 	KeyFile  string `id:"key_file" desc:"TLS key file path" validate:"required"`
 	Port     int    `id:"port" desc:"GRPC port" validate:"required"`
 
-	Debug bool `id:"debug"`
+	LogLevel string `id:"log_level" desc:"Options: debug, info, warn, error, fatal, panic"`
 
 	CockroachDB *CockroachDBConfig `id:"cockroach_db"`
 
 	ConfigFile string `id:"config_file" desc:"provide a config file path"`
 }{
 	Port: 9000,
+	LogLevel: "info",
 }
 
 //go:generate gomodifytags -file dunder.go -struct CockroachDBConfig -add-tags id -w
@@ -41,10 +42,11 @@ type CockroachDBConfig struct {
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if config.Debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	level, err := zerolog.ParseLevel(config.LogLevel)
+	if err != nil {
+		panic(err)
 	}
+	zerolog.SetGlobalLevel(level)
 	log := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 
 	if err := gonfig.Load(&config, gonfig.Conf{
