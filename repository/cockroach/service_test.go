@@ -273,9 +273,9 @@ var messages = []*repository.CreateMessageRequest{
 
 func TestSimpleTrends(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
-	//t.Log("using database: ", database)
-	//assert.NoError(t, createDb(database), "failed to create database")
-	//defer dropDb(database)
+	t.Log("using database: ", database)
+	assert.NoError(t, createDb(database), "failed to create database")
+	defer dropDb(database)
 	user := "root"
 
 	svc, err := New(&Config{

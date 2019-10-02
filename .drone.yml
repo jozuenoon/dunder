@@ -24,9 +24,9 @@ services:
   - name: cockroachdb
     image: cockroachdb/cockroach:v19.1.4
     entrypoint:
-      - "/cockroach/cockroach.sh"
+      - '/cockroach/cockroach.sh'
     command:
-     - "start --insecure"
+     - 'start --insecure'
 
 steps:
   # Goreleaser needs at least the last two tags.
