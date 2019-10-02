@@ -44,8 +44,12 @@ func executeDb(command, host, database string) error {
 	return nil
 }
 
-func dropDb(host, database string) error {
-	return executeDb("dropdb", host, database)
+func dropDb(t *testing.T, host, database string) {
+	t.Helper()
+	err := executeDb("dropdb", host, database)
+	if err != nil {
+		t.Fatalf("failed to drop database: %s", err)
+	}
 }
 
 func extractTagText(tags []*repository.Hashtag) []string {
@@ -64,7 +68,7 @@ func TestSimpleInsertAndGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create database: %s", err)
 	}
-	defer dropDb("", database)
+	defer dropDb(t,"", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -105,7 +109,7 @@ func TestService_CreateMessage_Message(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create database: %s", err)
 	}
-	defer dropDb("", database)
+	defer dropDb(t,"", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -188,7 +192,7 @@ func TestSimpleFilter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create database: %s", err)
 	}
-	defer dropDb("", database)
+	defer dropDb(t,"", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -305,7 +309,7 @@ func TestSimpleTrends(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create database: %s", err)
 	}
-	defer dropDb("", database)
+	defer dropDb(t,"", database)
 	user := "root"
 
 	svc, err := New(&Config{
