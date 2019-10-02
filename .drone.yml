@@ -23,6 +23,8 @@ trigger:
 services:
   - name: cockroachdb
     image: cockroachdb/cockroach:v19.1.4
+    entrypoint:
+      - "/cockroach/cockroach.sh"
     command:
      - "start --insecure"
 

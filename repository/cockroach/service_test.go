@@ -184,7 +184,7 @@ func TestSimpleFilter(t *testing.T) {
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
 				Rules: model.QueryRules{
-					Hashtag: "atwork",
+					Hashtag: []string{"atwork"},
 				},
 			},
 		}
@@ -200,7 +200,7 @@ func TestSimpleFilter(t *testing.T) {
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
 				Rules: model.QueryRules{
-					UserName: "john@example.com",
+					UserName: []string{"john@example.com"},
 				},
 			},
 		}
@@ -216,9 +216,9 @@ func TestSimpleFilter(t *testing.T) {
 		fromTime := time.Now().Add(-time.Second * 3)
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
-				FromDate: fromTime,
-				ToDate:   fromTime.Add(time.Second * 6),
-				Limit:    1,
+				FromDate: []time.Time{fromTime},
+				ToDate:   []time.Time{fromTime.Add(time.Second * 6)},
+				Limit:    []uint{1},
 			},
 		}
 		// Should return last message
@@ -232,8 +232,8 @@ func TestSimpleFilter(t *testing.T) {
 		// Search with cursor
 		filter = &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
-				Cursor: *rmsg.Ulid,
-				Limit:  1,
+				Cursor: []string{*rmsg.Ulid},
+				Limit:  []uint{1},
 			},
 		}
 		// Should return one before last message
@@ -294,11 +294,11 @@ func TestSimpleTrends(t *testing.T) {
 	}
 	tn := time.Now()
 	resp, err := svc.Trends(context.Background(), &repository.FilterImpl{QueryRequest: model.QueryRequest{
-		FromDate: tn.Add(-time.Minute * 20),
-		ToDate:   tn.Add(time.Minute * 5),
+		FromDate: []time.Time{tn.Add(-time.Minute * 20)},
+		ToDate:   []time.Time{tn.Add(time.Minute * 5)},
 		Rules: model.QueryRules{
-			Aggregation: time.Minute,
-			Hashtag:     "marble",
+			Aggregation: []time.Duration{time.Minute},
+			Hashtag:     []string{"marble"},
 		},
 	}})
 	assert.NoError(t, err, "failed to read trends")
