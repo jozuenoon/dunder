@@ -1,0 +1,4 @@
+cockroach-data
+bin
+tls
+vendor

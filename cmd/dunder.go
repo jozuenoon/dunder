@@ -16,19 +16,24 @@ import (
 )
 
 var config = struct {
-	TLS      bool   `id:"tls" desc:"Connection uses TLS if true, else plain TCP" validate:"required"`
-	CertFile string `id:"cert_file" desc:"TLS certificate file path" validate:"required"`
-	KeyFile  string `id:"key_file" desc:"TLS key file path" validate:"required"`
-	Port     int    `id:"port" desc:"GRPC port" validate:"required"`
+	TLS  bool `id:"use_tls" desc:"Connection uses TLS if true, else plain TCP"`
+	Port int  `id:"port" desc:"GRPC port" validate:"required"`
 
 	LogLevel string `id:"log_level" desc:"Options: debug, info, warn, error, fatal, panic"`
 
 	CockroachDB *CockroachDBConfig `id:"cockroach"`
 
+	TlsConfig *TlsConfig `id:"tls"`
+
 	ConfigFile string `id:"config_file" desc:"provide a config file path"`
 }{
-	Port: 9000,
+	Port:     9000,
 	LogLevel: "debug",
+}
+
+type TlsConfig struct {
+	CertFile string `id:"crt" desc:"TLS certificate file path"`
+	KeyFile  string `id:"key" desc:"TLS key file path"`
 }
 
 //go:generate gomodifytags -file dunder.go -struct CockroachDBConfig -add-tags id -w
@@ -84,7 +89,7 @@ func main() {
 	r.HandleFunc("/trend", dunderHttp.Trends).Methods(http.MethodGet)
 
 	if config.TLS {
-		if err := http.ListenAndServeTLS(fmt.Sprintf(":%d", config.Port), config.CertFile, config.KeyFile, r); err != nil {
+		if err := http.ListenAndServeTLS(fmt.Sprintf(":%d", config.Port), config.TlsConfig.CertFile, config.TlsConfig.KeyFile, r); err != nil {
 			log.Fatal().Err(err).Msg("server failed")
 		}
 	}
