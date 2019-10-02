@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -18,12 +19,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createDb(database string) error {
-	return executeDb("createdb", database)
+func createDb(host, database string) error {
+	return executeDb("createdb", host, database)
 }
 
-func executeDb(command, database string) error {
-	cmd := exec.Command(command, "-p", "26257", "-h", "127.0.0.1", "-U", "root", "-e", database)
+func executeDb(command, host, database string) error {
+	if envHost, ok := os.LookupEnv("COCKROACH_HOST"); ok {
+		host = envHost
+	}
+	if host == "" {
+		host = "localhost"
+	}
+
+	cmd := exec.Command(command, "-p", "26257", "-h", host, "-U", "root", "-e", database)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
@@ -32,8 +40,8 @@ func executeDb(command, database string) error {
 	return nil
 }
 
-func dropDb(database string) error {
-	return executeDb("dropdb", database)
+func dropDb(host, database string) error {
+	return executeDb("dropdb", host, database)
 }
 
 func extractTagText(tags []*repository.Hashtag) []string {
@@ -48,8 +56,11 @@ func extractTagText(tags []*repository.Hashtag) []string {
 func TestSimpleInsertAndGet(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb("", database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb("", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -86,8 +97,11 @@ func TestSimpleInsertAndGet(t *testing.T) {
 func TestService_CreateMessage_Message(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb("", database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb("", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -98,7 +112,7 @@ func TestService_CreateMessage_Message(t *testing.T) {
 		User:          &user,
 	})
 	if err != nil {
-		t.Fatal("failed to create database")
+		t.Fatal("failed to create service")
 	}
 	tests := []struct {
 		name string
@@ -166,8 +180,11 @@ func TestService_CreateMessage_Message(t *testing.T) {
 func TestSimpleFilter(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb("", database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb("", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -280,8 +297,11 @@ var messages = []*repository.CreateMessageRequest{
 func TestSimpleTrends(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb("", database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb("", database)
 	user := "root"
 
 	svc, err := New(&Config{
@@ -292,7 +312,7 @@ func TestSimpleTrends(t *testing.T) {
 		User:          &user,
 	})
 	if err != nil {
-		t.Fatal("failed to create database")
+		t.Fatal("failed to create service")
 	}
 
 	// Put some messages
