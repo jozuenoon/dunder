@@ -48,7 +48,7 @@ func (d *DunderImpl) GetMessage(ctx context.Context, req *model.GetMessageReques
 	if err != nil {
 		return nil, err
 	}
-	return &model.GetMessageResponse{model.Message{
+	return &model.GetMessageResponse{ Message: model.Message{
 		ID: *msg.Ulid,
 		User: model.User{
 			ID:   msg.User.ID,
@@ -56,5 +56,6 @@ func (d *DunderImpl) GetMessage(ctx context.Context, req *model.GetMessageReques
 		},
 		Text:     msg.Text,
 		Hashtags: extractTagText(msg.Hashtags),
+		CreatedAt: msg.CreatedAt,
 	}}, nil
 }

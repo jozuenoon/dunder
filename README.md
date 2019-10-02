@@ -101,8 +101,9 @@ cockroach_db:
 Post some messges:
 
 ```bash
-$ curl -d '{"text": "some text", "hashtags":["tag1", "tag2"]}' -H"User: ${USER}" https://localhost:8081/message
-$ curl -d '{"text": "some other text", "hashtags":["tag3", "tag4"]}' -H"User: ${USER}-second" https://localhost:8081/message
+$ TOKEN=`echo -n $USER | base64 -w0`
+$ curl -d '{"text": "some text", "hashtags":["tag1", "tag2"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
+$ curl -d '{"text": "some other text", "hashtags":["tag3", "tag4"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
 ```
 
 User header is required and users are dynamically created as Dunder don't provide yet

@@ -11,8 +11,8 @@ import (
 // User has and belongs to many languages, use `user_languages` as join table
 type User struct {
 	ID          uint `gorm:"primary_key"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	CreatedAt   time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"`
 	DeletedAt   *time.Time `sql:"index"`
 	Name        *string    `gorm:"unique;not null"`
 	ScreenName  string
@@ -31,8 +31,8 @@ type Trend struct {
 
 type Message struct {
 	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"`
 	DeletedAt *time.Time `sql:"index"`
 	Ulid      *string    `gorm:"unique;not null"`
 	User      User       `gorm:"foreignkey:UserRef;association_autoupdate:false"`
@@ -43,8 +43,8 @@ type Message struct {
 
 type Hashtag struct {
 	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"`
 	DeletedAt *time.Time `sql:"index"`
 	Text      *string    `gorm:"unique;not null"`
 	Messages  []*Message `gorm:"many2many:message_hashtags"`

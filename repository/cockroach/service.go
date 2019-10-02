@@ -82,10 +82,7 @@ type ServiceImpl struct {
 
 func (s *ServiceImpl) Message(ctx context.Context, ulid string) (*repository.Message, error) {
 	var resp repository.Message
-	if result := s.DB.Where("ulid = ?", ulid).Preload("User").Preload("Hashtags").First(&resp); result.Error != nil {
-		return nil, result.Error
-	}
-	return &resp, nil
+	return &resp, s.DB.Where("ulid = ?", ulid).Preload("User").Preload("Hashtags").First(&resp).Error
 }
 
 func (s *ServiceImpl) getUserByName(db *gorm.DB, name string) (*repository.User, error) {
@@ -162,6 +159,7 @@ func (s *ServiceImpl) CreateMessage(ctx context.Context, req *repository.CreateM
 	us := u.String()
 	message := &repository.Message{
 		CreatedAt: t,
+		UpdatedAt: t,
 		Ulid:      &us,
 		UserRef:   user.ID,
 		Text:      req.Text,

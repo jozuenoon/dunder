@@ -6,11 +6,13 @@ DOCKER_REGISTRY ?= jozuenoon
 GIT_BRANCH := $(shell git branch | sed -n '/\* /s///p' 2>/dev/null)
 GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null)
 
+TOKEN := $(shell echo -n $$USER | base64 -w0)
+
 
 all: bin build_docker push
 
 test:
-	go test ./... -v
+	go test ./... -v -race
 
 .PHONY: bin
 bin:
@@ -39,13 +41,16 @@ run: bin
 	./bin/dunder --config_file config.yaml
 
 new_message:
-	curl -d '{"text": "some text", "hashtags":["dummy3"]}' -H"User: ${USER}" https://localhost:8081/message
+	curl -d '{"text": "some text", "hashtags":["dummy3"]}' -H"Authorization: Bearer ${TOKEN}" https://localhost:8081/message
+
+get_messages:
+	curl https://localhost:8081/message?ulid=${ulid} | jq '.'
 
 get_message:
-	curl https://localhost:8081/message?ulid=${ulid}
+	curl https://localhost:8081/message/${ulid} | jq '.'
 
 get_tag:
-	curl https://localhost:8081/message?hashtag=dummy3
+	curl https://localhost:8081/message?hashtag=dummy3 | jq '.'
 
 get_trends:
-	curl "https://localhost:8081/trend?to_date=2019-09-23&aggregation=1m&from_date=2019-09-22&hashtag=dummy3"
+	curl "https://localhost:8081/trend?from_date=2019-09-23&aggregation=24h&to_date=2019-10-22&hashtag=dummy3"

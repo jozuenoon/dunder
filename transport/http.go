@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,9 +42,14 @@ func (h *Http) CreateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Header.Get("user")
-	if user == "" {
-		h.writeError(fmt.Errorf("expected `User` header"), w)
+	token := r.Header.Get("authorization")
+	if token == "" {
+		h.writeError(unauthorized, w)
+		return
+	}
+	user, err := h.userFromBearerToken(token)
+	if err != nil {
+		h.writeError(err, w)
 		return
 	}
 	ctx := context.Background()
@@ -53,7 +58,13 @@ func (h *Http) CreateMessage(w http.ResponseWriter, r *http.Request) {
 		h.writeError(err, w)
 		return
 	}
-	h.writeResponse(resp, w)
+	buf, err := h.prepareResponse(resp)
+	if err != nil {
+		h.writeError(err, w)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	h.writeResponse(buf, w)
 }
 
 func (h Http) MessageQuery(w http.ResponseWriter, r *http.Request) {
@@ -61,9 +72,16 @@ func (h Http) MessageQuery(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.writeError(err, w)
 	}
-	// Unary query
-	mulid := r.Form.Get("ulid")
-	if mulid != "" {
+
+	// Unary query from path
+	vars := mux.Vars(r)
+	if ulid, ok := vars["ulid"]; ok {
+		h.unaryMessageQuery(ulid, w)
+		return
+	}
+
+	// Unary query parameters
+	if mulid := r.Form.Get("ulid"); mulid != "" {
 		h.unaryMessageQuery(mulid, w)
 		return
 	}
@@ -79,7 +97,12 @@ func (h Http) MessageQuery(w http.ResponseWriter, r *http.Request) {
 		h.writeError(err, w)
 		return
 	}
-	h.writeResponse(resp, w)
+	buf, err := h.prepareResponse(resp)
+	if err != nil {
+		h.writeError(err, w)
+		return
+	}
+	h.writeResponse(buf, w)
 }
 
 func (h Http) unaryMessageQuery(mulid string, w http.ResponseWriter) {
@@ -88,7 +111,12 @@ func (h Http) unaryMessageQuery(mulid string, w http.ResponseWriter) {
 		h.writeError(err, w)
 		return
 	}
-	h.writeResponse(resp, w)
+	buf, err := h.prepareResponse(resp)
+	if err != nil {
+		h.writeError(err, w)
+		return
+	}
+	h.writeResponse(buf, w)
 }
 
 func (h Http) Trends(w http.ResponseWriter, r *http.Request) {
@@ -108,33 +136,26 @@ func (h Http) Trends(w http.ResponseWriter, r *http.Request) {
 		h.writeError(err, w)
 		return
 	}
-	h.writeResponse(resp, w)
-}
-
-func (h *Http) writeError(err error, w http.ResponseWriter) {
-	msg := &Response{
-		Error: err.Error(),
-	}
-	var buf bytes.Buffer
-	err1 := json.NewEncoder(&buf).Encode(msg)
-	if err1 != nil {
-		h.log.Error().Err(err1).Msg("failed to marshall error")
-	}
-	_, err = w.Write(buf.Bytes())
+	buf, err := h.prepareResponse(resp)
 	if err != nil {
-		h.log.Error().Err(err).Msg("writeResponse: failed to write")
+		h.writeError(err, w)
+		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	h.writeResponse(buf, w)
 }
 
-func (h *Http) writeResponse(resp interface{}, w http.ResponseWriter) {
+
+func (h *Http) prepareResponse(resp interface{}) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(&Response{
 		Data: resp,
 	}); err != nil {
-		h.writeError(err, w)
-		return
+		return nil, err
 	}
+	return &buf, nil
+}
+
+func (h *Http) writeResponse(buf *bytes.Buffer, w http.ResponseWriter) {
 	_, err := w.Write(buf.Bytes())
 	if err != nil {
 		h.log.Error().Err(err).Msg("writeResponse: failed to write")

@@ -28,7 +28,7 @@ var config = struct {
 	ConfigFile string `id:"config_file" desc:"provide a config file path"`
 }{
 	Port: 9000,
-	LogLevel: "info",
+	LogLevel: "debug",
 }
 
 //go:generate gomodifytags -file dunder.go -struct CockroachDBConfig -add-tags id -w
@@ -80,6 +80,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/message", dunderHttp.CreateMessage).Methods(http.MethodPost)
 	r.HandleFunc("/message", dunderHttp.MessageQuery).Methods(http.MethodGet)
+	r.HandleFunc("/message/{ulid}", dunderHttp.MessageQuery).Methods(http.MethodGet)
 	r.HandleFunc("/trend", dunderHttp.Trends).Methods(http.MethodGet)
 
 	if config.TLS {
