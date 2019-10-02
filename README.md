@@ -1,5 +1,6 @@
 # Dunder - geeky message API
-
+[![Build Status](https://cloud.drone.io/api/badges/jozuenoon/dunder/status.svg)](https://cloud.drone.io/jozuenoon/dunder)
+[![codecov](https://codecov.io/gh/jozuenoon/dunder/branch/master/graph/badge.svg)](https://codecov.io/gh/jozuenoon/dunder)
 [![GolangCI](https://golangci.com/badges/github.com/jozuenoon/dunder.svg)](https://golangci.com/r/github.com/jozuenoon/dunder)
 
 Dunder the message JSON API provides gateway for sharing messages directly out of 
