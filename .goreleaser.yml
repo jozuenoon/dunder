@@ -1,0 +1,16 @@
+# https://goreleaser.com/customization/
+builds:
+  - id: dunder
+    binary: dunder
+    main: ./cmd/dunder.go
+    goos: [freebsd, windows, linux, darwin]
+    goarch: [amd64, arm, arm64]
+    goarm: [6, 7]
+    ignore:
+      - { goos: darwin, goarch: 386 }
+      - { goos: linux, goarch: arm, goarm: 6 }
+
+archives:
+  - id: dunder
+    builds: [dunder]
+    format: binary
