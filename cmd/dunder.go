@@ -23,7 +23,7 @@ var config = struct {
 
 	LogLevel string `id:"log_level" desc:"Options: debug, info, warn, error, fatal, panic"`
 
-	CockroachDB *CockroachDBConfig `id:"cockroach_db"`
+	CockroachDB *CockroachDBConfig `id:"cockroach"`
 
 	ConfigFile string `id:"config_file" desc:"provide a config file path"`
 }{

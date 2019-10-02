@@ -12,7 +12,7 @@ TOKEN := $(shell echo -n $$USER | base64 -w0)
 all: bin build_docker push
 
 test:
-	go test ./... -v -race
+	go test ./... -v -race -tags integration
 
 .PHONY: bin
 bin:

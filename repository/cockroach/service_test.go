@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -22,8 +23,20 @@ func createDb(database string) error {
 	return executeDb("createdb", database)
 }
 
+func getDBHost() string {
+	var host string
+	if envHost, ok := os.LookupEnv("COCKROACH_HOST"); ok {
+		host = envHost
+	}
+	if host == "" {
+		host = "localhost"
+	}
+	return host
+}
+
 func executeDb(command, database string) error {
-	cmd := exec.Command(command, "-p", "26257", "-h", "127.0.0.1", "-U", "root", "-e", database)
+	host := getDBHost()
+	cmd := exec.Command(command, "-p", "26257", "-h", host, "-U", "root", "-e", database)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
@@ -32,8 +45,12 @@ func executeDb(command, database string) error {
 	return nil
 }
 
-func dropDb(database string) error {
-	return executeDb("dropdb", database)
+func dropDb(t *testing.T, database string) {
+	t.Helper()
+	err := executeDb("dropdb", database)
+	if err != nil {
+		t.Fatalf("failed to drop database: %s", err)
+	}
 }
 
 func extractTagText(tags []*repository.Hashtag) []string {
@@ -48,18 +65,23 @@ func extractTagText(tags []*repository.Hashtag) []string {
 func TestSimpleInsertAndGet(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb(database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb(t, database)
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(),
 		ShouldMigrate: true,
 		Debug:         false,
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create service")
+	}
 	msg := &repository.CreateMessageRequest{
 		UserName: "john@example.com",
 		Text:     "my dummy text 1",
@@ -84,18 +106,23 @@ func TestSimpleInsertAndGet(t *testing.T) {
 func TestService_CreateMessage_Message(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb(database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb(t, database)
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(),
 		ShouldMigrate: true,
 		Debug:         true,
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create service")
+	}
 	tests := []struct {
 		name string
 		req  *repository.CreateMessageRequest
@@ -162,18 +189,23 @@ func TestService_CreateMessage_Message(t *testing.T) {
 func TestSimpleFilter(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
 	t.Log("using database: ", database)
-	assert.NoError(t, createDb(database), "failed to create database")
-	defer dropDb(database)
+	err := createDb(database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb(t, database)
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(),
 		ShouldMigrate: true,
 		Debug:         false,
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create service")
+	}
 
 	for _, m := range messages {
 		_, err := svc.CreateMessage(context.Background(), m)
@@ -184,7 +216,7 @@ func TestSimpleFilter(t *testing.T) {
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
 				Rules: model.QueryRules{
-					Hashtag: "atwork",
+					Hashtag: []string{"atwork"},
 				},
 			},
 		}
@@ -200,7 +232,7 @@ func TestSimpleFilter(t *testing.T) {
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
 				Rules: model.QueryRules{
-					UserName: "john@example.com",
+					UserName: []string{"john@example.com"},
 				},
 			},
 		}
@@ -216,9 +248,9 @@ func TestSimpleFilter(t *testing.T) {
 		fromTime := time.Now().Add(-time.Second * 3)
 		filter := &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
-				FromDate: fromTime,
-				ToDate:   fromTime.Add(time.Second * 6),
-				Limit:    1,
+				FromDate: []time.Time{fromTime},
+				ToDate:   []time.Time{fromTime.Add(time.Second * 6)},
+				Limit:    []uint{1},
 			},
 		}
 		// Should return last message
@@ -232,8 +264,8 @@ func TestSimpleFilter(t *testing.T) {
 		// Search with cursor
 		filter = &repository.FilterImpl{
 			QueryRequest: model.QueryRequest{
-				Cursor: *rmsg.Ulid,
-				Limit:  1,
+				Cursor: []string{*rmsg.Ulid},
+				Limit:  []uint{1},
 			},
 		}
 		// Should return one before last message
@@ -273,19 +305,24 @@ var messages = []*repository.CreateMessageRequest{
 
 func TestSimpleTrends(t *testing.T) {
 	database := fmt.Sprintf("test_%d", rand.Intn(1000))
-	//t.Log("using database: ", database)
-	//assert.NoError(t, createDb(database), "failed to create database")
-	//defer dropDb(database)
+	t.Log("using database: ", database)
+	err := createDb(database)
+	if err != nil {
+		t.Fatalf("failed to create database: %s", err)
+	}
+	defer dropDb(t, database)
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(),
 		ShouldMigrate: true,
 		Debug:         true,
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create service")
+	}
 
 	// Put some messages
 	for _, m := range messages {
@@ -294,11 +331,11 @@ func TestSimpleTrends(t *testing.T) {
 	}
 	tn := time.Now()
 	resp, err := svc.Trends(context.Background(), &repository.FilterImpl{QueryRequest: model.QueryRequest{
-		FromDate: tn.Add(-time.Minute * 20),
-		ToDate:   tn.Add(time.Minute * 5),
+		FromDate: []time.Time{tn.Add(-time.Minute * 20)},
+		ToDate:   []time.Time{tn.Add(time.Minute * 5)},
 		Rules: model.QueryRules{
-			Aggregation: time.Minute,
-			Hashtag:     "marble",
+			Aggregation: []time.Duration{time.Minute},
+			Hashtag:     []string{"marble"},
 		},
 	}})
 	assert.NoError(t, err, "failed to read trends")
