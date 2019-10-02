@@ -23,14 +23,18 @@ func createDb(host, database string) error {
 	return executeDb("createdb", host, database)
 }
 
-func executeDb(command, host, database string) error {
+func getDBHost(host string) string {
 	if envHost, ok := os.LookupEnv("COCKROACH_HOST"); ok {
 		host = envHost
 	}
 	if host == "" {
 		host = "localhost"
 	}
+	return host
+}
 
+func executeDb(command, host, database string) error {
+	host = getDBHost(host)
 	cmd := exec.Command(command, "-p", "26257", "-h", host, "-U", "root", "-e", database)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -64,14 +68,14 @@ func TestSimpleInsertAndGet(t *testing.T) {
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(""),
 		ShouldMigrate: true,
 		Debug:         false,
 		Database:      &database,
 		User:          &user,
 	})
 	if err != nil {
-		t.Fatal("failed to create database")
+		t.Fatal("failed to create service")
 	}
 	msg := &repository.CreateMessageRequest{
 		UserName: "john@example.com",
@@ -105,7 +109,7 @@ func TestService_CreateMessage_Message(t *testing.T) {
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(""),
 		ShouldMigrate: true,
 		Debug:         true,
 		Database:      &database,
@@ -188,14 +192,14 @@ func TestSimpleFilter(t *testing.T) {
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(""),
 		ShouldMigrate: true,
 		Debug:         false,
 		Database:      &database,
 		User:          &user,
 	})
 	if err != nil {
-		t.Fatal("failed to create database")
+		t.Fatal("failed to create service")
 	}
 
 	for _, m := range messages {
@@ -305,7 +309,7 @@ func TestSimpleTrends(t *testing.T) {
 	user := "root"
 
 	svc, err := New(&Config{
-		Host:          "localhost",
+		Host:          getDBHost(""),
 		ShouldMigrate: true,
 		Debug:         true,
 		Database:      &database,
