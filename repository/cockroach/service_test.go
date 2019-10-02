@@ -59,7 +59,9 @@ func TestSimpleInsertAndGet(t *testing.T) {
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create database")
+	}
 	msg := &repository.CreateMessageRequest{
 		UserName: "john@example.com",
 		Text:     "my dummy text 1",
@@ -95,7 +97,9 @@ func TestService_CreateMessage_Message(t *testing.T) {
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create database")
+	}
 	tests := []struct {
 		name string
 		req  *repository.CreateMessageRequest
@@ -173,7 +177,9 @@ func TestSimpleFilter(t *testing.T) {
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create database")
+	}
 
 	for _, m := range messages {
 		_, err := svc.CreateMessage(context.Background(), m)
@@ -285,7 +291,9 @@ func TestSimpleTrends(t *testing.T) {
 		Database:      &database,
 		User:          &user,
 	})
-	assert.NoError(t, err, "failed to create database")
+	if err != nil {
+		t.Fatal("failed to create database")
+	}
 
 	// Put some messages
 	for _, m := range messages {

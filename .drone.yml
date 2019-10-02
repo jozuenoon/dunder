@@ -26,7 +26,8 @@ services:
     entrypoint:
       - '/cockroach/cockroach.sh'
     command:
-     - 'start --insecure'
+     - 'start'
+     - '--insecure'
 
 steps:
   # Goreleaser needs at least the last two tags.
@@ -42,6 +43,8 @@ steps:
       CODECOV_TOKEN: { from_secret: CODECOV_TOKEN }
       COCKROACH_HOST: "cockroachdb"
     commands:
+      - apt update
+      - apt install postgresql-client -y
       - go build -v ./...
       - go test -coverpkg=./... -race -covermode=atomic -tags integration -coverprofile=coverage.txt ./...
       - curl -s https://codecov.io/bash | bash
